@@ -33,10 +33,7 @@ export interface IBuyer {
 
 export interface IOrderData {
   items: string[];
-  payment: "card" | "cash";
-  email: string;
-  phone: string;
-  address: string;
+  buyer: IBuyer;
   total: number;
 }
 

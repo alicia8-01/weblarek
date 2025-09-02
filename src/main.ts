@@ -30,13 +30,20 @@ if (product) {
 
 // Методы класса BasketModel
 basket.addItem(apiProducts.items[0]);
-console.log("Массив товаров в корзине:", basket.getItems());
-
-basket.deleteItem(apiProducts.items[0].id);
+console.log(
+  "Массив товаров в корзине после добавления нового товара:",
+  basket.getItems()
+);
 
 console.log("Массив товаров в корзине:", basket.getItems());
 console.log("Количество товаров в корзине:", basket.getItemCount());
 console.log("Сумма всех товаров в корзине:", basket.getTotalPrice());
+
+basket.deleteItem(apiProducts.items[0].id);
+console.log(
+  "Массив товаров в корзине после удаления товара:",
+  basket.getItems()
+);
 
 // Методы класса BuyerModel
 const firstBuyer = {
@@ -47,7 +54,10 @@ const firstBuyer = {
 };
 buyer.setData(firstBuyer);
 console.log("Данные первого покупателя:", buyer.getData());
-console.log("Валидация данных первого покупателя:", buyer.validateData());
+console.log("Валидация оплаты первого покупателя:", buyer.validatePayment());
+console.log("Валидация адреса первого покупателя:", buyer.validateAddress());
+console.log("Валидация email первого покупателя:", buyer.validateEmail());
+console.log("Валидация телефона первого покупателя:", buyer.validatePhone());
 
 const secondBuyer = {
   payment: "cash" as const,
@@ -57,7 +67,6 @@ const secondBuyer = {
 };
 buyer.setData(secondBuyer);
 console.log("Данные второго покупателя:", buyer.getData());
-console.log("Валидация данных второго покупателя:", buyer.validateData());
 console.log("Валидация оплаты второго покупателя:", buyer.validatePayment());
 console.log("Валидация адреса второго покупателя:", buyer.validateAddress());
 console.log("Валидация email второго покупателя:", buyer.validateEmail());
