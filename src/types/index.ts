@@ -40,3 +40,16 @@ export interface IOrderResult {
   id: string;
   total: number;
 }
+
+export interface ICatalogChangedEvent {
+  items: IProduct[];
+}
+
+export interface IBasketChangedEvent extends ICatalogChangedEvent {
+  count: number;
+  total: number;
+}
+
+export interface ISelectedItemEvent {
+  item: IProduct;
+}
