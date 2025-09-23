@@ -18,7 +18,7 @@ export class FormView<T> extends Component<T> {
     this.container.addEventListener("submit", (e: Event) => {
       e.preventDefault();
       if (!this.button.disabled) {
-        this.events.emit(`${this.container.name}:submit`);
+        this.events.emit(`${container.name}:submit`);
       }
     });
   }

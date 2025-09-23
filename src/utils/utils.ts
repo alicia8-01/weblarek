@@ -65,7 +65,14 @@ export function cloneTemplate<T extends HTMLElement>(
   query: string | HTMLTemplateElement
 ): T {
   const template = ensureElement(query) as HTMLTemplateElement;
-  return template.content.firstElementChild.cloneNode(true) as T;
+  const content = template.content.firstElementChild;
+
+  if (!content) {
+    throw new Error(`Template is empty: ${query}`);
+  }
+
+  return content.cloneNode(true) as T;
+  //return template.content.firstElementChild.cloneNode(true) as T;
 }
 
 export function bem(
@@ -86,13 +93,14 @@ export function getObjectProperties(
   obj: object,
   filter?: (name: string, prop: PropertyDescriptor) => boolean
 ): string[] {
-  return Object.entries(
-    Object.getOwnPropertyDescriptors(Object.getPrototypeOf(obj))
-  )
-    .filter(([name, prop]: [string, PropertyDescriptor]) =>
-      filter ? filter(name, prop) : name !== "constructor"
-    )
-    .map(([name, prop]) => name);
+  return (
+    Object.entries(Object.getOwnPropertyDescriptors(Object.getPrototypeOf(obj)))
+      .filter(([name, prop]: [string, PropertyDescriptor]) =>
+        filter ? filter(name, prop) : name !== "constructor"
+      )
+      //.map(([name, prop]) => name);
+      .map(([name]) => name)
+  );
 }
 
 /**
