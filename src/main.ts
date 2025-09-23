@@ -208,7 +208,7 @@ events.on("order:submit", () => {
 
 // Событие изменения способа оплаты
 events.on("order.payment:change", (data: { payment: string }) => {
-  buyer.setData({ payment: data.payment });
+  buyer.setData({ payment: data.payment as "card" | "cash" | "" });
   const orderErrors = buyer.validatePayment() || buyer.validateAddress();
 
   if (currentOrder) {
