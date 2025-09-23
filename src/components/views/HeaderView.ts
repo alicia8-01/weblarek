@@ -10,7 +10,7 @@ export class HeaderView extends Component<IHeader> {
   protected counterElement: HTMLElement;
   protected basketButton: HTMLButtonElement;
 
-  constructor(protected events: IEvents, countainer: HTMLElement) {
+  constructor(countainer: HTMLElement, protected events: IEvents) {
     super(countainer);
 
     this.counterElement = ensureElement<HTMLElement>(

@@ -47,7 +47,7 @@ const basket = new BasketModel(events);
 const buyer = new BuyerModel(events);
 
 // Создание компонентов представления
-const header = new HeaderView(events, headerContainer);
+const header = new HeaderView(headerContainer, events);
 const modal = new ModalView(modalContainer, events);
 const gallery = new GalleryView(galleryContainer, {
   onClick: (item: IProduct) => {

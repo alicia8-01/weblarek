@@ -7,8 +7,8 @@ interface IModalData {
 }
 
 export class ModalView extends Component<IModalData> {
-  protected closeButton: HTMLButtonElement;
   protected content: HTMLElement;
+  protected closeButton: HTMLButtonElement;
 
   constructor(container: HTMLElement, protected events: IEvents) {
     super(container);
@@ -32,12 +32,12 @@ export class ModalView extends Component<IModalData> {
     }
   }
 
-  open() {
+  open(): void {
     this.container.classList.add("modal_active");
     this.events.emit("modal:open");
   }
 
-  close() {
+  close(): void {
     this.container.classList.remove("modal_active");
     this.modalContent = null;
     this.events.emit("modal:close");

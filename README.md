@@ -155,6 +155,29 @@ Presenter - презентер содержит основную логику п
 `id: string` - уникальный идентификатор заказа
 `total: number` - общая стоимость заказа
 
+#### Интерфейс ICatalogChangedEvent
+
+Описание структуры события изменения каталога с товарами
+
+Поля:
+`items: IProduct[]` - массив товаров
+
+#### Интерфейс IBasketChangedEvent
+
+Описание структуры события изменения корзины с товарами
+Наследуется от структуры события изменения каталога с товарами ICatalogChangedEvent
+
+Поля:
+`count: number` - количество товаров в корзине
+`total: number` - общая сумма товаров в корзине
+
+#### Интерфейс ISelectedItemEvent
+
+Описание структуры события изменения выбора товара
+
+Поля:
+`item: IProduct` - товар
+
 ### Модели данных
 
 #### Класс CatalogModel
@@ -228,3 +251,198 @@ Presenter - презентер содержит основную логику п
 Методы:
 `getItems(): Promise<IProduct[]>` - выполняет GET запрос на эндпоинт /product/ и возвращает массив товаров
 `createOrder(orderData: IOrderData): Promise<IOrderResult>` - выполняет POST запрос на эндпоинт /order/, передает данные заказа и возвращает результат оформления заказа
+
+### Представления
+
+#### Класс CardView
+
+Родительский класс карточки
+
+Конструктор:
+`constructor(container: HTMLElement)` - конструктор принимает контей2нер карточки
+
+Поля:
+`title: HTMLElement | null` - заголовок товара на карточке
+`image: HTMLImageElement | null` - изображение товара на карточке
+`category: HTMLElement | null` - категория товара на карточке
+`price: HTMLElement | null` - цена товара на карточке
+
+Методы:
+`set cardTitle(value: string)` - задаёт заголовок для отображения в карточке
+`set cardImage(value: string)` - задаёт изображение для отображения в карточке
+`set cardCategory(value: string)` - задаёт категорию для отображения в карточке
+`set cardPrice(value: number | null)` - задаёт цену для отображения в карточке
+
+#### Класс CardBasketView
+
+Отображает карточку товара в корзине
+Наследуется от класса CardView
+
+Конструктор:
+`constructor(container: HTMLElement, action?: ICardAction)` - конструктор принимает контейнер карточки и обработчик события
+
+Поля:
+`index: HTMLElement` - порядковый номер товара в корзине
+`button: HTMLButtonElement` - кнопка удаления товара из корзины
+
+Методы:
+`set itemIndex(value: number)` - задаёт порядковый номер товара в корзине
+
+#### Класс CardCatalogView
+
+Отображает карточку в катологе товаров
+Наследуется от класса CardView
+
+Конструктор:
+`constructor(container: HTMLElement, action?: ICardAction)` - конструктор принимает контейнер карточки и обработчик события
+
+#### Класс CardPreview
+
+Отображает карточку товара в модульном окне предпросмотра
+Наследуется от класса CardView
+
+Конструктор:
+`constructor(container: HTMLElement, action?: ICardAction)`
+
+Поля:
+`description: HTMLElement` - описание товара на карточке
+`button: HTMLButtonElement` - кнопка добавления товара в корзину
+`isInBasket: boolean = false` - флаг наличия выбранного товара в корзине
+`hasPrice: boolean = true` - флаг наличия цены у выбранного товара
+
+Методы:
+`set cardDescription(value: string)` - зада1т описание товара для отображения в карточке
+`set buttonText(value: string)` - задаёт текст для кнопки
+`set buttonDisabled(value: boolean)` - задаёт состояние кнопки
+`set checkIsInBasket(value: boolean)` - задаёт флаг наличия товара в корзине
+`set checkHasPrice(value: boolean)` - задаёт флаг наличия цены у товара
+`render(data: ICard): HTMLElement` - обновляет данные о товаре в карточке
+`updateState(): void` - обновляет состояние кнопки
+
+#### Класс BasketView
+
+Отображает корзину с товарами
+
+Конструктор:
+`constructor(container: HTMLElement, action: IBasketAction)` - конструктор принимает контейнер корзины и обработчик события
+
+Поля:
+`list: HTMLElement` - список товаров в корзине
+`total: HTMLElement` - общая стоимость в корзине
+`button: HTMLButtonElement` - кнопка формления заказа
+
+Методы:
+`set items(items: IProduct[])` - задаёт товары или их отсутсвия в корзине
+`set countTotal(value: number)` - задаёт общую стоимость всех товаров в корзине
+`set buttonDisabled(value: boolean)` - задаёт состояние кнопки оформления заказа
+`render(data: IBasket): HTMLElement` - отображает данные корзины
+
+#### Класс FormView
+
+Родительский класс формы
+
+Конструктор:
+`constructor(container: HTMLFormElement, events: IEvents)` - конструктор принимает контейнер формы и экземпляр, унаследованный от интерфейса IEvents
+
+Поля:
+`button: HTMLButtonElement` - кнопка отправки формы
+`errors: HTMLElement` - элемент для отображения ошибок отправки формы
+
+Методы:
+`set formErrors(value: string)` - задаёт текст ошибки
+`set valid(value: boolean)` - задаёт состояние кнопки отправки формы
+`render(data: T): HTMLElement` - отображает данные формы
+
+#### Класс ContactsView
+
+Отображает форму контактов
+Наследуется от класса FormView
+
+Конструктор:
+`constructor(container: HTMLFormElement, events: IEvents)` - конструктор принимает контейнер формы и экземпляр, унаследованный от интерфейса IEvents
+
+Поля:
+`emailInput: HTMLInputElement` - поле для ввода E-mail
+`phoneInput: HTMLInputElement` - поле для ввода номера телефона
+
+Методы:
+`set email(value: string)` - задаёт E-mail
+`set phone(value: string)` - задаёт номер телефона
+`render(data: IContacts): HTMLElement` - отображает данные формы контактов
+
+#### Класс GalleryView
+
+Отображает галерею товаров на главной странице сайта
+
+Конструктор:
+`constructor(container: HTMLElement, action: IGalleryAction)` - конструктор принимает контейнер галереи и обработчик события
+
+Поля:
+`cards: CardCatalogView[]` - массив карточек товаров в галерее
+
+Методы:
+`render(items: IProduct[]): HTMLElement` - отображает товары в галерее в виде отдельных карточек
+
+#### Класс HeaderView
+
+Отображает хедер главной страницы сайта
+
+Конструктор:
+`constructor(countainer: HTMLElement, events: IEvents)` - конструктор принимает контейнер хедера и экземпляр, унаследованный от интерфейса IEvents
+
+Поля:
+`counterElement: HTMLElement` - элемент отображения счёчика товаров в корзине
+`basketButton: HTMLButtonElement` - кнопка открытия корзины
+
+Методы:
+`set counter(value: number)` - задаёт значение счётчика товаров в корзине
+
+#### Класс ModalView
+
+Отображает модульное окно
+
+Конструктор:
+`constructor(container: HTMLElement, events: IEvents)` - конструктор принимает контейнер модульного окна и экземпляр, унаследованный от интерфейса IEvents
+
+Поля:
+`content: HTMLElement` - контейнер содержимого
+`closeButton: HTMLButtonElement` - кнопка закрытия модульного окна
+
+Методы:
+`set modalContent(value: HTMLElement | null)` - задаёт содержимое модульного окна
+`open(): void` - открывает модульное окно
+`close(): void` - закрывает модульное окно
+`render(data: IModalData): HTMLElement` - отображает содержимое модульного окна
+
+#### Класс OrderView
+
+Отображает форму заказа
+Наследуется от класса FormView
+
+Конструктор:
+`constructor(container: HTMLFormElement, events: IEvents)` - конструктор принимает контейнер формы заказа и экземпляр, унаследованный от интерфейса IEvents
+
+Поля:
+`payButtons: HTMLButtonElement[]` - кнопка выбора способа оплаты
+`addressInput: HTMLInputElement` - поле ввода адреса
+`errors: HTMLElement` - элемент для отображения ошибок
+
+Методы:
+`set payment(value: string)` - задаёт способ оплаты
+`set address(value: string)` - задаёт адрес
+`set orderErrors(value: string)` - задаёт текст ошибки заказа
+`render(data: IOrder): HTMLElement` - отображает данные формы заказа
+
+#### Класс SuccessView
+
+Отображает успешное оформления заказа
+
+Конструктор:
+`constructor(container: HTMLElement, action: ISuccessAction)` - конструктор принимает контейнер и обработчик события
+
+Поля:
+`close: HTMLElement` - кнопка закрытия
+`total: HTMLElement` - общая стоимость выполненного заказа
+
+Методы:
+`set countTotal(value: number)` - задаёт общую стоимость выполненного заказа
