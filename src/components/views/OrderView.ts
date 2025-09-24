@@ -55,9 +55,17 @@ export class OrderView extends FormView<IOrder> {
 
   render(data: IOrder): HTMLElement {
     super.render(data);
+
     this.payment = data.payment;
     this.address = data.address;
     this.orderErrors = data.errors || "";
+
     return this.container;
+  }
+
+  protected update(_data: Partial<IOrder>): void {
+    if (_data.payment !== undefined) this.payment = _data.payment;
+    if (_data.address !== undefined) this.address = _data.address;
+    if (_data.errors !== undefined) this.orderErrors = _data.errors;
   }
 }

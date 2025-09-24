@@ -37,12 +37,19 @@ export class CardView<T> extends Component<T> {
   }
 
   set cardImage(value: string) {
-    if (this.image) this.setImage(this.image, value);
+    if (this.image && value) {
+      if (value.startsWith("http") || value.startsWith("/")) {
+        this.setImage(this.image, value);
+      } else {
+        console.warn("Некорректный URL изображения:", value);
+      }
+    }
   }
 
   set cardCategory(value: string) {
     if (this.category) {
       this.setText(this.category, value);
+
       const categoryClass =
         categoryMap[value as keyof typeof categoryMap] ||
         "card__category_other";

@@ -36,4 +36,6 @@ export class FormView<T> extends Component<T> {
 
     return this.container;
   }
+
+  protected update(_data: Partial<T>): void {}
 }

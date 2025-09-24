@@ -42,6 +42,7 @@ export class BasketView extends Component<IBasket> {
       this.list.appendChild(emptyMessage);
     } else {
       this.list.innerHTML = "";
+
       items.forEach((item, index) => {
         const card = new CardBasketView(
           cloneTemplate<HTMLElement>("#card-basket"),
@@ -78,5 +79,10 @@ export class BasketView extends Component<IBasket> {
     this.buttonDisabled = data.items.length === 0;
 
     return this.container;
+  }
+
+  protected update(data: Partial<IBasket>): void {
+    if (data.items !== undefined) this.items = data.items;
+    if (data.total !== undefined) this.countTotal = data.total;
   }
 }

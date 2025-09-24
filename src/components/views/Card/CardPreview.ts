@@ -5,7 +5,12 @@ interface ICardAction {
   onClick: (event: MouseEvent) => void;
 }
 
-export class CardPreview extends CardView<ICard> {
+interface ICardPreviewData extends ICard {
+  isInBasket?: boolean;
+  hasPrice?: boolean;
+}
+
+export class CardPreview extends CardView<ICardPreviewData> {
   protected description: HTMLElement;
   protected button: HTMLButtonElement;
   protected isInBasket: boolean = false;
@@ -57,9 +62,27 @@ export class CardPreview extends CardView<ICard> {
     }
   }
 
-  render(data: ICard): HTMLElement {
-    this.checkHasPrice = data.price !== null;
+  render(data: ICardPreviewData): HTMLElement {
+    if (data.title !== undefined) this.cardTitle = data.title;
+    if (data.image !== undefined) this.cardImage = data.image;
+    if (data.category !== undefined) this.cardCategory = data.category;
+    if (data.price !== undefined) this.cardPrice = data.price;
 
-    return super.render(data);
+    super.render(data);
+
+    if (data.isInBasket !== undefined) {
+      this.isInBasket = data.isInBasket;
+    }
+    if (data.hasPrice !== undefined) {
+      this.hasPrice = data.hasPrice;
+    }
+
+    if (data.description) {
+      this.cardDescription = data.description;
+    }
+
+    this.updateState();
+
+    return this.container;
   }
 }

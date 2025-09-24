@@ -104,6 +104,18 @@ events.on("catalog:item-selected", (data: ISelectedItemEvent) => {
   const isInBasket = basket.isItemInBasket(data.item.id);
   const hasPrice = data.item.price !== null;
 
+  const imageUrl = data.item.image
+    ? `${CDN_URL}/${replaceExtensionToPng(data.item.image)}`
+    : "";
+
+  const itemData = {
+    ...data.item,
+    image: imageUrl,
+    description: data.item.description || "Описание отсутствует",
+    isInBasket: isInBasket,
+    hasPrice: hasPrice,
+  };
+
   currentPreview = new CardPreview(
     cloneTemplate<HTMLElement>("#card-preview"),
     {
@@ -119,19 +131,6 @@ events.on("catalog:item-selected", (data: ISelectedItemEvent) => {
       },
     }
   );
-
-  const imageUrl = data.item.image
-    ? `${CDN_URL}/${replaceExtensionToPng(data.item.image)}`
-    : "";
-
-  const itemData = {
-    ...data.item,
-    image: imageUrl,
-    description: data.item.description || "Описание отсутствует",
-  };
-
-  currentPreview.checkIsInBasket = isInBasket;
-  currentPreview.checkHasPrice = hasPrice;
 
   const previewElement = currentPreview.render(itemData);
   modal.modalContent = previewElement;
@@ -150,6 +149,12 @@ events.on("basket:open", () => {
 
   modal.modalContent = basketElement;
   modal.open();
+
+  events.emit("cart:changed", {
+    items: basket.getItems(),
+    total: basket.getTotalPrice(),
+    count: basket.getItems().length,
+  });
 });
 
 // Событие изменения корзины с товарами
@@ -163,14 +168,25 @@ events.on("cart:changed", (data: IBasketChangedEvent) => {
       const isInBasket = basket.isItemInBasket(selectedItem.id);
       const hasPrice = selectedItem.price !== null;
 
-      currentPreview.checkIsInBasket = isInBasket;
-      currentPreview.checkHasPrice = hasPrice;
+      const imageUrl = selectedItem.image
+        ? `${CDN_URL}/${replaceExtensionToPng(selectedItem.image)}`
+        : "";
+
+      const itemData = {
+        ...selectedItem,
+        image: imageUrl,
+        description: selectedItem.description || "Описание отсутствует",
+        isInBasket: isInBasket,
+        hasPrice: hasPrice,
+      };
+
+      currentPreview.render(itemData);
     }
   }
 
   if (currentModal === "basket") {
     const basketElement = basketView.render({
-      items: data.items,
+      items: basket.getItems(),
       total: data.total,
     });
 
@@ -282,11 +298,10 @@ events.on("contacts:submit", () => {
       .postOrder(orderData)
       .then((result: IOrderResult) => {
         currentModal = "success";
-        // Показ успешного оформления заказа
+
         const successElement = success.render({ total: result.total });
         modal.modalContent = successElement;
 
-        // Очистка корзины и данных покупателя
         basket.clear();
         buyer.clearData();
       })
@@ -338,10 +353,16 @@ function initializationApp() {
   apiClient
     .getItems()
     .then((items) => {
+      console.log("Загружены товары:", items);
+
+      if (!items || !Array.isArray(items)) {
+        throw new Error("Некорректные данные от сервера");
+      }
+
       catalog.setItems(items);
     })
     .catch((error) => {
-      console.error("Ошибка загрузки товаров:", error);
+      console.error("Ошибка загрузки:", error);
     });
 }
 

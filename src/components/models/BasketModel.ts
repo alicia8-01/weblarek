@@ -13,7 +13,7 @@ export class BasketModel {
   }
 
   deleteItem(id: string): void {
-    this.items.filter((i) => i.id !== id);
+    this.items = this.items.filter((i) => i.id !== id);
 
     this.basketChanged();
   }

@@ -1,8 +1,8 @@
 import { IProduct } from "../../types";
 import { CardCatalogView } from "./Card/CardCatalogView";
 import { Component } from "../base/Component";
-import { cloneTemplate, replaceExtensionToPng } from "../../utils/utils";
-import { CDN_URL } from "../../utils/constants";
+import { replaceExtensionToPng } from "../../utils/utils";
+import { categoryMap, CDN_URL } from "../../utils/constants";
 
 interface IGalleryAction {
   onClick: (item: IProduct) => void;
@@ -19,31 +19,49 @@ export class GalleryView extends Component<IProduct[]> {
 
   render(items: IProduct[]): HTMLElement {
     super.render();
-
     this.container.innerHTML = "";
-    this.cards = items.map((item) => {
-      const card = new CardCatalogView(
-        cloneTemplate<HTMLElement>("#card-catalog"),
-        {
-          onClick: () => this.action.onClick(item),
+
+    items.forEach((item, index) => {
+      console.log(`Rendering item ${index}: ${item.title}`);
+
+      const template = document.getElementById(
+        "card-catalog"
+      ) as HTMLTemplateElement;
+      const cardElement = template.content.firstElementChild?.cloneNode(
+        true
+      ) as HTMLElement;
+
+      if (cardElement) {
+        const titleElement = cardElement.querySelector(".card__title");
+        const priceElement = cardElement.querySelector(".card__price");
+        const categoryElement = cardElement.querySelector(".card__category");
+        const imageElement = cardElement.querySelector(
+          ".card__image"
+        ) as HTMLImageElement;
+
+        if (titleElement) titleElement.textContent = item.title;
+
+        if (priceElement)
+          priceElement.textContent = item.price
+            ? `${item.price} синапсов`
+            : "Бесценно";
+
+        if (categoryElement) {
+          categoryElement.textContent = item.category;
+          const categoryClass =
+            categoryMap[item.category as keyof typeof categoryMap] ||
+            "card__category_other";
+          categoryElement.className = `card__category ${categoryClass}`;
         }
-      );
+        if (imageElement && item.image) {
+          const imageUrl = `${CDN_URL}/${replaceExtensionToPng(item.image)}`;
+          imageElement.src = imageUrl;
+          imageElement.alt = item.title;
+        }
 
-      const imageUrl = item.image
-        ? `${CDN_URL}/${replaceExtensionToPng(item.image)}`
-        : "";
-
-      const cardElement = card.render({
-        ...item,
-        title: item.title,
-        image: imageUrl,
-        category: item.category,
-        price: item.price,
-      });
-
-      this.container.append(cardElement);
-
-      return card;
+        cardElement.addEventListener("click", () => this.action.onClick(item));
+        this.container.appendChild(cardElement);
+      }
     });
 
     return this.container;

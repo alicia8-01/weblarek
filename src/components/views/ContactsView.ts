@@ -58,4 +58,11 @@ export class ContactsView extends FormView<IContacts> {
 
     return this.container;
   }
+
+  protected update(_data: Partial<IContacts>): void {
+    if (_data.email !== undefined) this.email = _data.email;
+    if (_data.phone !== undefined) this.phone = _data.phone;
+    if (_data.errors !== undefined) this.formErrors = _data.errors;
+    if (_data.valid !== undefined) this.valid = _data.valid;
+  }
 }

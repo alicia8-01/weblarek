@@ -10,12 +10,16 @@ interface ICardAction {
 }
 
 export class CardBasketView extends CardView<ICardBasket> {
-  protected index: HTMLElement;
+  protected indexElement: HTMLElement;
   protected button: HTMLButtonElement;
 
   constructor(container: HTMLElement, action?: ICardAction) {
     super(container);
-    this.index = ensureElement<HTMLElement>(".basket__item-index", container);
+
+    this.indexElement = ensureElement<HTMLElement>(
+      ".basket__item-index",
+      container
+    );
     this.button = ensureElement<HTMLButtonElement>(
       ".basket__item-delete",
       container
@@ -27,6 +31,17 @@ export class CardBasketView extends CardView<ICardBasket> {
   }
 
   set itemIndex(value: number) {
-    this.setText(this.index, value.toString());
+    this.setText(this.indexElement, value.toString());
+  }
+
+  render(data: ICardBasket): HTMLElement {
+    if (data.title !== undefined) this.cardTitle = data.title;
+    if (data.price !== undefined) this.cardPrice = data.price;
+    if (data.category !== undefined) this.cardCategory = data.category;
+    if (data.image !== undefined) this.cardImage = data.image;
+
+    this.itemIndex = data.index;
+
+    return this.container;
   }
 }
