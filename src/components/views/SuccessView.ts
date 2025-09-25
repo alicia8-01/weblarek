@@ -33,4 +33,12 @@ export class SuccessView extends Component<ISuccess> {
   set countTotal(value: number) {
     this.setText(this.total, `Списано ${value} синапсов`);
   }
+
+  render(data: ISuccess): HTMLElement {
+    super.render(data);
+
+    this.countTotal = data.total;
+
+    return this.container;
+  }
 }

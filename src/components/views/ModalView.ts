@@ -6,9 +6,18 @@ interface IModalData {
   content: HTMLElement;
 }
 
+export type ModalContentType =
+  | "preview"
+  | "basket"
+  | "order"
+  | "contacts"
+  | "success"
+  | null;
+
 export class ModalView extends Component<IModalData> {
   protected content: HTMLElement;
   protected closeButton: HTMLButtonElement;
+  protected currentContentType: ModalContentType = null;
 
   constructor(container: HTMLElement, protected events: IEvents) {
     super(container);
@@ -32,19 +41,34 @@ export class ModalView extends Component<IModalData> {
     }
   }
 
-  open(): void {
+  setContent(content: HTMLElement, contentType: ModalContentType): void {
+    this.modalContent = content;
+    this.currentContentType = contentType;
+    this.events.emit("modal:contentChanged", { type: contentType });
+  }
+
+  getCurrentContentType(): ModalContentType {
+    return this.currentContentType;
+  }
+
+  open(contentType?: ModalContentType): void {
     this.container.classList.add("modal_active");
-    this.events.emit("modal:open");
+    if (contentType) {
+      this.currentContentType = contentType;
+    }
+    this.events.emit("modal:open", { type: this.currentContentType });
   }
 
   close(): void {
     this.container.classList.remove("modal_active");
     this.modalContent = null;
+    this.currentContentType = null;
     this.events.emit("modal:close");
   }
 
   render(data: IModalData): HTMLElement {
     super.render(data);
+
     this.open();
 
     return this.container;

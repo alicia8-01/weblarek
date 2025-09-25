@@ -55,30 +55,25 @@ const gallery = new GalleryView(galleryContainer, {
   },
 });
 
-// Создание переменных для отслеживания представлений
-let currentPreview: CardPreview | null = null;
-let currentOrder: OrderView | null = null;
-let currentContacts: ContactsView | null = null;
-let currentModal: string | null = null;
-
 // Создание компонентов для модальных окон
 const basketTemplate = cloneTemplate<HTMLElement>("#basket");
 const basketView = new BasketView(basketTemplate, {
   onClick: () => {
-    currentModal = "order";
-    currentOrder = new OrderView(
+    const orderView = new OrderView(
       cloneTemplate<HTMLFormElement>("#order"),
       events
     );
 
     const customerData = buyer.getData();
-    const orderFormElement = currentOrder.render({
+    const orderFormElement = orderView.render({
       address: customerData.address,
       payment: customerData.payment,
       errors: "",
+      valid: false,
     });
 
-    modal.modalContent = orderFormElement;
+    modal.setContent(orderFormElement, "order");
+    modal.open("order");
   },
 
   onRemove: (id: string) => {
@@ -100,7 +95,7 @@ events.on("catalog:changed", (data: ICatalogChangedEvent) => {
 
 // Событие просмотра выбранного товара из каталога
 events.on("catalog:item-selected", (data: ISelectedItemEvent) => {
-  currentModal = "preview";
+  //currentModal = "preview";
   const isInBasket = basket.isItemInBasket(data.item.id);
   const hasPrice = data.item.price !== null;
 
@@ -116,52 +111,42 @@ events.on("catalog:item-selected", (data: ISelectedItemEvent) => {
     hasPrice: hasPrice,
   };
 
-  currentPreview = new CardPreview(
-    cloneTemplate<HTMLElement>("#card-preview"),
-    {
-      onClick: () => {
-        if (hasPrice) {
-          if (isInBasket) {
-            basket.deleteItem(data.item.id);
-          } else {
-            basket.addItem(data.item);
-          }
+  const preview = new CardPreview(cloneTemplate<HTMLElement>("#card-preview"), {
+    onClick: () => {
+      if (hasPrice) {
+        if (isInBasket) {
+          basket.deleteItem(data.item.id);
+        } else {
+          basket.addItem(data.item);
         }
-        modal.close();
-      },
-    }
-  );
+      }
 
-  const previewElement = currentPreview.render(itemData);
-  modal.modalContent = previewElement;
+      modal.close();
+    },
+  });
 
-  modal.open();
+  const previewElement = preview.render(itemData);
+
+  modal.setContent(previewElement, "preview");
+  modal.open("preview");
 });
 
 // Событие открытие корзины с товарами
 events.on("basket:open", () => {
-  currentModal = "basket";
-
   const basketElement = basketView.render({
     items: basket.getItems(),
     total: basket.getTotalPrice(),
   });
 
-  modal.modalContent = basketElement;
-  modal.open();
-
-  events.emit("cart:changed", {
-    items: basket.getItems(),
-    total: basket.getTotalPrice(),
-    count: basket.getItems().length,
-  });
+  modal.setContent(basketElement, "basket");
+  modal.open("basket");
 });
 
 // Событие изменения корзины с товарами
 events.on("cart:changed", (data: IBasketChangedEvent) => {
   header.counter = data.count;
 
-  if (currentModal === "preview" && currentPreview) {
+  if (modal.getCurrentContentType() === "preview") {
     const selectedItem = catalog.getSelectedItem();
 
     if (selectedItem) {
@@ -180,17 +165,35 @@ events.on("cart:changed", (data: IBasketChangedEvent) => {
         hasPrice: hasPrice,
       };
 
-      currentPreview.render(itemData);
+      const preview = new CardPreview(
+        cloneTemplate<HTMLElement>("#card-preview"),
+        {
+          onClick: () => {
+            if (hasPrice) {
+              if (isInBasket) {
+                basket.deleteItem(selectedItem.id);
+              } else {
+                basket.addItem(selectedItem);
+              }
+            }
+
+            modal.close();
+          },
+        }
+      );
+
+      const previewElement = preview.render(itemData);
+      modal.setContent(previewElement, "preview");
     }
   }
 
-  if (currentModal === "basket") {
+  if (modal.getCurrentContentType() === "basket") {
     const basketElement = basketView.render({
       items: basket.getItems(),
       total: data.total,
     });
 
-    modal.modalContent = basketElement;
+    modal.setContent(basketElement, "basket");
   }
 });
 
@@ -199,26 +202,41 @@ events.on("order:submit", () => {
   const orderErrors = buyer.validatePayment() || buyer.validateAddress();
 
   if (orderErrors.length === 0) {
-    currentModal = "contacts";
-    currentContacts = new ContactsView(
+    const contactsView = new ContactsView(
       cloneTemplate<HTMLFormElement>("#contacts"),
       events
     );
 
     const customerData = buyer.getData();
-    const contactsFormElement = currentContacts.render({
+    const contactsFormElement = contactsView.render({
       email: customerData.email,
       phone: customerData.phone,
       errors: "",
       valid: false,
     });
 
-    modal.modalContent = contactsFormElement;
+    modal.setContent(contactsFormElement, "contacts");
   } else {
-    if (currentOrder) {
-      currentOrder.orderErrors = orderErrors;
-      currentOrder.valid = orderErrors.length === 0;
-    }
+    events.emit("order:errors", { errors: orderErrors });
+  }
+});
+
+events.on("order:errors", (data: { errors: string }) => {
+  if (modal.getCurrentContentType() === "order") {
+    const orderView = new OrderView(
+      cloneTemplate<HTMLFormElement>("#order"),
+      events
+    );
+
+    const customerData = buyer.getData();
+    const orderFormElement = orderView.render({
+      address: customerData.address,
+      payment: customerData.payment,
+      errors: data.errors,
+      valid: data.errors.length === 0,
+    });
+
+    modal.setContent(orderFormElement, "order");
   }
 });
 
@@ -227,9 +245,21 @@ events.on("order.payment:change", (data: { payment: string }) => {
   buyer.setData({ payment: data.payment as "card" | "cash" | "" });
   const orderErrors = buyer.validatePayment() || buyer.validateAddress();
 
-  if (currentOrder) {
-    currentOrder.orderErrors = orderErrors;
-    currentOrder.valid = orderErrors.length === 0;
+  if (modal.getCurrentContentType() === "order") {
+    const orderView = new OrderView(
+      cloneTemplate<HTMLFormElement>("#order"),
+      events
+    );
+
+    const customerData = buyer.getData();
+    const orderFormElement = orderView.render({
+      address: customerData.address,
+      payment: customerData.payment,
+      errors: orderErrors,
+      valid: orderErrors.length === 0,
+    });
+
+    modal.setContent(orderFormElement, "order");
   }
 });
 
@@ -242,9 +272,21 @@ events.on(
     if (data.validate) {
       const orderErrors = buyer.validatePayment() || buyer.validateAddress();
 
-      if (currentOrder) {
-        currentOrder.formErrors = orderErrors;
-        currentOrder.valid = orderErrors.length === 0;
+      if (modal.getCurrentContentType() === "order") {
+        const orderView = new OrderView(
+          cloneTemplate<HTMLFormElement>("#order"),
+          events
+        );
+
+        const customerData = buyer.getData();
+        const orderFormElement = orderView.render({
+          address: customerData.address,
+          payment: customerData.payment,
+          errors: orderErrors,
+          valid: orderErrors.length === 0,
+        });
+
+        modal.setContent(orderFormElement, "order");
       }
     }
   }
@@ -255,13 +297,21 @@ events.on("contacts.email:change", (data: { email: string }) => {
   buyer.setData({ email: data.email });
   const errors = buyer.validatePhone() || buyer.validateEmail();
 
-  if (currentContacts) {
-    currentContacts.render({
-      email: buyer.getData().email,
-      phone: buyer.getData().phone,
+  if (modal.getCurrentContentType() === "contacts") {
+    const contactsView = new ContactsView(
+      cloneTemplate<HTMLFormElement>("#contacts"),
+      events
+    );
+
+    const customerData = buyer.getData();
+    const contactsFormElement = contactsView.render({
+      email: customerData.email,
+      phone: customerData.phone,
       errors: errors,
       valid: errors.length === 0,
     });
+
+    modal.setContent(contactsFormElement, "contacts");
   }
 });
 
@@ -270,13 +320,21 @@ events.on("contacts.phone:change", (data: { phone: string }) => {
   buyer.setData({ phone: data.phone });
   const errors = buyer.validatePhone() || buyer.validateEmail();
 
-  if (currentContacts) {
-    currentContacts.render({
-      email: buyer.getData().email,
-      phone: buyer.getData().phone,
+  if (modal.getCurrentContentType() === "contacts") {
+    const contactsView = new ContactsView(
+      cloneTemplate<HTMLFormElement>("#contacts"),
+      events
+    );
+
+    const customerData = buyer.getData();
+    const contactsFormElement = contactsView.render({
+      email: customerData.email,
+      phone: customerData.phone,
       errors: errors,
       valid: errors.length === 0,
     });
+
+    modal.setContent(contactsFormElement, "contacts");
   }
 });
 
@@ -297,55 +355,46 @@ events.on("contacts:submit", () => {
     apiClient
       .postOrder(orderData)
       .then((result: IOrderResult) => {
-        currentModal = "success";
-
         const successElement = success.render({ total: result.total });
-        modal.modalContent = successElement;
+        modal.setContent(successElement, "success");
 
         basket.clear();
         buyer.clearData();
       })
       .catch((error) => {
         console.error("Ошибка оформления заказа:", error);
-        currentContacts = new ContactsView(
+
+        const contactsView = new ContactsView(
           cloneTemplate<HTMLFormElement>("#contacts"),
           events
         );
 
         const customerData = buyer.getData();
-        const contactsFormElement = currentContacts.render({
+        const contactsFormElement = contactsView.render({
           email: customerData.email,
           phone: customerData.phone,
           errors: "Ошибка оформления заказа. Попробуйте еще раз.",
           valid: false,
         });
 
-        modal.modalContent = contactsFormElement;
+        modal.setContent(contactsFormElement, "contacts");
       });
   } else {
-    currentContacts = new ContactsView(
+    const contactsView = new ContactsView(
       cloneTemplate<HTMLFormElement>("#contacts"),
       events
     );
 
     const customerData = buyer.getData();
-    const contactsFormElement = currentContacts.render({
+    const contactsFormElement = contactsView.render({
       email: customerData.email,
       phone: customerData.phone,
       errors: errors,
       valid: false,
     });
 
-    modal.modalContent = contactsFormElement;
+    modal.setContent(contactsFormElement, "contacts");
   }
-});
-
-// Событие закрытия модального окна
-events.on("modal:close", () => {
-  currentModal = null;
-  currentPreview = null;
-  currentOrder = null;
-  currentContacts = null;
 });
 
 // Функция инициализации приложения

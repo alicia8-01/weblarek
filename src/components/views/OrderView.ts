@@ -6,6 +6,7 @@ interface IOrder {
   payment: string;
   address: string;
   errors: string;
+  valid: boolean;
 }
 
 export class OrderView extends FormView<IOrder> {
@@ -59,6 +60,7 @@ export class OrderView extends FormView<IOrder> {
     this.payment = data.payment;
     this.address = data.address;
     this.orderErrors = data.errors || "";
+    this.valid = data.valid;
 
     return this.container;
   }
@@ -67,5 +69,6 @@ export class OrderView extends FormView<IOrder> {
     if (_data.payment !== undefined) this.payment = _data.payment;
     if (_data.address !== undefined) this.address = _data.address;
     if (_data.errors !== undefined) this.orderErrors = _data.errors;
+    if (_data.valid !== undefined) this.valid = _data.valid;
   }
 }

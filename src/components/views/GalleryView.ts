@@ -21,9 +21,7 @@ export class GalleryView extends Component<IProduct[]> {
     super.render();
     this.container.innerHTML = "";
 
-    items.forEach((item, index) => {
-      console.log(`Rendering item ${index}: ${item.title}`);
-
+    items.forEach((item) => {
       const template = document.getElementById(
         "card-catalog"
       ) as HTMLTemplateElement;
